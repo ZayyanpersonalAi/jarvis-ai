@@ -77,6 +77,17 @@ export default function PcControlPage() {
       </div>
 
       <div className="card-surface p-5 mt-4">
+        <h3 className="font-bold mb-2">Connection Key (Pairing)</h3>
+        <p className="text-sm" style={{ color: "var(--text-2)" }}>Ye key is web app me save rehti hai. <b>Desktop app isi key ko utha kar khud connect ho jata hai</b> — app me alag se kuch dalna nahi parta. Agar kabhi alag PC agent chalana ho to us PC par <code>JARVIS_PC_TOKEN</code> me yehi key dalni hai, bas.</p>
+        <div className="flex flex-wrap gap-2 mt-3">
+          <input className="input-field" id="pair-key-input" placeholder="Apni key likhein, ya Generate dabayein" style={{ maxWidth: 360 }} />
+          <button className="btn-secondary" onClick={() => { const el = document.getElementById("pair-key-input") as HTMLInputElement | null; if (el?.value?.trim()) { try { localStorage.setItem("jarvis-pc-token", el.value.trim()); } catch { /* ignore */ } void check(); } }}>Key save karein</button>
+          <button className="btn-secondary" onClick={() => { const k = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10); try { localStorage.setItem("jarvis-pc-token", k); } catch { /* ignore */ } const el = document.getElementById("pair-key-input") as HTMLInputElement | null; if (el) el.value = k; void check(); }}>Generate key</button>
+          <button className="btn-secondary" onClick={() => { const el = document.getElementById("pair-key-input") as HTMLInputElement | null; try { if (el) el.value = localStorage.getItem("jarvis-pc-token") || ""; } catch { /* ignore */ } }}>Meri saved key dikhao</button>
+        </div>
+      </div>
+
+      <div className="card-surface p-5 mt-4">
         <h3 className="font-bold mb-2">Try a PC command (or say it on the Voice page)</h3>
         <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (text.trim()) void send(text); }}>
           <input className="input-field" value={text} onChange={(e) => setText(e.target.value)} placeholder="e.g. chrome kholo / open Chrome" />

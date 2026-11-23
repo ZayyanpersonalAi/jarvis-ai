@@ -2,7 +2,6 @@
 import Link from "next/link";
 import VoiceAssistant from "@/components/VoiceAssistant";
 import DailyPicks from "@/components/DailyPicks";
-import { JARVIS_COMMANDS } from "@/constants";
 import { CHARACTERS } from "@/lib/character";
 import { useMemoryStore } from "@/store/memory";
 import { useEffect } from "react";
@@ -10,7 +9,7 @@ import { useEffect } from "react";
 const FEATURES = [
   { icon: "M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z M5 11a7 7 0 0 0 14 0 M12 18v3", title: "Voice Control", desc: "Speak in Urdu, Roman Urdu or English — Jarvis listens and answers in the same language." },
   { icon: "M8 2v4 M16 2v4 M3 10h18 M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z", title: "Appointments", desc: "Book, view, confirm or cancel appointments — by voice or from the dashboard." },
-  { icon: "M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M2 6l10 7 10-7", title: "Email", desc: "Send email hands-free. Real sending with a Resend key, demo mode without one." },
+  { icon: "M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M2 6l10 7 10-7", title: "Email", desc: "Send email hands-free — asal email Resend se jata hai." },
   { icon: "M13 2L4 14h6l-1 8 9-12h-6l1-8z", title: "Automation", desc: "Tools and triggers that turn everyday jobs into one voice command." },
   { icon: "M4 5h16 M4 12h16 M4 19h10", title: "Widget", desc: "Drop the Jarvis chat widget on any website with one embed script." },
   { icon: "M9 3H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z M19 3h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z M9 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z M19 13h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z", title: "150+ Apps Path", desc: "An extensible tool registry — new connectors can be added one at a time." },
@@ -74,7 +73,7 @@ export default function HomePage() {
             <Link href="/dashboard/voice" className="btn-primary" style={{ padding: "12px 22px", fontSize: 15 }}>Start talking</Link>
             <Link href="/signup" className="btn-secondary" style={{ padding: "12px 22px", fontSize: 15, background: "rgba(255,255,255,0.10)", borderColor: "rgba(255,255,255,0.25)", color: "#fff" }}>Create free account</Link>
           </div>
-          <p className="mt-4 text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>No key needed to try — demo mode works out of the box.</p>
+          <p className="mt-4 text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>Live hai — Gemini AI ke saath. Boliye, aur kaam ho jaye.</p>
         </section>
 
         {/* Voice — push-to-talk front and centre */}
@@ -117,26 +116,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Try saying — Urdu phrase + English translation */}
-        <section className="mt-10">
-          <p className="eyebrow" style={{ color: "var(--text-3)" }}>Try saying</p>
-          <h2 className="text-2xl font-bold mt-1" style={{ letterSpacing: "-0.02em" }}>Say it in Urdu — or English</h2>
-          <p className="text-sm mt-1" style={{ color: "var(--text-3)" }}>Jarvis understands Urdu script, Roman Urdu and English. Tap a command to see them all — with the Urdu phrase and its English meaning.</p>
-          <div className="flex flex-wrap gap-2 mt-4">
-            {JARVIS_COMMANDS.slice(0, 8).map((c) => (
-              <Link key={c.id} href="/dashboard/commands" className="chip" title={c.english}>
-                <span>{c.romanUrdu}</span>
-                <span style={{ color: "var(--text-3)" }}>· {c.english}</span>
-              </Link>
-            ))}
-          </div>
-          <p className="mt-4 text-sm"><Link href="/dashboard/commands" style={{ color: "var(--teal-700)", fontWeight: 600 }}>See all commands →</Link></p>
-        </section>
-
         <DailyPicks />
 
         <footer className="mt-10 pt-5 text-center text-sm" style={{ color: "var(--text-3)", borderTop: "1px solid var(--border)" }}>
-          Jarvis AI — demo mode needs no real keys. Real voice needs an OpenAI key.
+          Jarvis AI — Live, powered by Gemini AI.
         </footer>
       </div>
     </main>

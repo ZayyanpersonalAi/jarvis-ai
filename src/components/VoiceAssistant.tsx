@@ -85,9 +85,7 @@ export default function VoiceAssistant() {
       <div className="mt-6 space-y-2" style={{ maxHeight: 320, overflowY: "auto" }}>
         {messages.length === 0 && (
           <div className="text-sm" style={{ color: "var(--text-3)" }}>
-            <p>No conversation yet — hold the mic or type below. Try:</p>
-            <p className="mt-1">“appointment book karo” — Book an appointment</p>
-            <p className="mt-1">“waqt kya hua hai?” — What time is it?</p>
+            <p>No conversation yet — hold the mic or type below.</p>
           </div>
         )}
         {messages.map((m) => (
