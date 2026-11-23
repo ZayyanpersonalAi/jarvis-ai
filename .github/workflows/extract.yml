@@ -1,0 +1,11 @@
+name: Extract project files
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: unzip -o jarvis-full.zip && cp -r jarvis-full/. . && rm -rf jarvis-full jarvis-full.zip .env.local .github && git config user.name "github-actions[bot]" && git config user.email "github-actions[bot]@users.noreply.github.com" && git add -A && git commit -m "Initial commit — Jarvis AI" && git push
