@@ -73,15 +73,20 @@ export async function POST(req: Request) {
       const result = await executeTool(cmd.tool, cmd.args);
       // book_appointment needs structured args — if the name cannot be pulled
       // from raw text, the demo message comes back instead
-      return NextResponse.json({ ok: result.ok, reply: result.message, toolUsed: cmd.tool, commandId: cmd.commandId, demo: !process.env.OPENAI_API_KEY });
+      return NextResponse.json({ ok: result.ok, reply: result.message, toolUsed: cmd.tool, commandId: cmd.commandId, demo: !(process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY) });
     }
 
-    // 2) Real AI reply when an OpenAI key exists
-    if (process.env.OPENAI_API_KEY) {
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    // 2) Real AI reply — Gemini (FREE key, OpenAI-compatible endpoint) preferred,
+    //    otherwise OpenAI when its key exists
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const aiKey = geminiKey || process.env.OPENAI_API_KEY;
+    if (aiKey) {
+      const openai = geminiKey
+        ? new OpenAI({ apiKey: geminiKey, baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/" })
+        : new OpenAI({ apiKey: aiKey });
       const tools = listToolInfo().map((t) => ({ type: "function" as const, function: { name: t.name, description: t.description, parameters: { type: "object", properties: t.parameters, required: [] } } }));
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: geminiKey ? (process.env.GEMINI_MODEL || "gemini-2.5-flash") : "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message },
