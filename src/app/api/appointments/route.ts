@@ -12,7 +12,7 @@ function liveClient() {
   return createClient(url, service, { auth: { persistSession: false } });
 }
 
-async function demoBusinessId(sb: ReturnType<typeof createClient>) {
+async function demoBusinessId(sb: NonNullable<ReturnType<typeof liveClient>>{
   const { data } = await sb.from("businesses").select("id").eq("slug", "demo").single();
   return (data as { id?: string } | null)?.id || null;
 }
