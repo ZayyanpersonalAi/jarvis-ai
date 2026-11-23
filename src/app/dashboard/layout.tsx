@@ -1,5 +1,6 @@
 import Sidebar from "@/components/Sidebar";
 import MiniBar from "@/components/MiniBar";
+import SessionGuard from "@/components/SessionGuard";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
       <main className="flex-1 p-5 sm:p-7 gradient-mesh" style={{ minWidth: 0 }}>{children}</main>
       <MiniBar />
+      <SessionGuard />
     </div>
   );
 }

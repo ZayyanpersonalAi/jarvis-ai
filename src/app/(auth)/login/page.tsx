@@ -10,6 +10,7 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [saveLogin, setSaveLogin] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -22,6 +23,7 @@ function LoginForm() {
         router.push(search.get("next") || "/dashboard");
         return;
       }
+      try { if (saveLogin) localStorage.removeItem("jarvis-nosave"); else localStorage.setItem("jarvis-nosave", "1"); sessionStorage.setItem("jarvis-alive", "1"); } catch { /* ignore */ }
       const supabase = createClient();
       const { error: err } = await supabase.auth.signInWithPassword({ email, password });
       if (err) setError(err.message);
@@ -36,6 +38,10 @@ function LoginForm() {
       {!isSupabaseConfigured() && <p className="text-xs p-3 rounded-xl" style={{ background: "var(--bg-subtle)" }}>Demo Mode: no Supabase keys — log in with any email.</p>}
       <input className="input-field" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
       <input className="input-field" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+      <label className="flex items-center gap-2 text-sm" style={{ color: "var(--text-2)" }}>
+        <input type="checkbox" checked={saveLogin} onChange={(e) => setSaveLogin(e.target.checked)} />
+        Save login — is device par logged in raho
+      </label>
       {error && <p className="text-sm" style={{ color: "#f87171" }}>{error}</p>}
       <button className="btn-primary w-full" disabled={loading}>{loading ? "Please wait…" : "Log in"}</button>
       <p className="text-sm text-center">No account yet? <Link href="/signup" style={{ color: "var(--teal-400)", fontWeight: 600 }}>Sign up</Link></p>

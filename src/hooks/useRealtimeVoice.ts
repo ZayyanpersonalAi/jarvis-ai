@@ -60,8 +60,18 @@ export function useRealtimeVoice() {
       const mem = JSON.parse(localStorage.getItem("jarvis-memory-v1") || "{}") as { userName?: string; interests?: string[]; facts?: { text: string }[]; chatSummary?: string; character?: string };
       const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text, language: lang, memory: mem }) });
       const j = await res.json();
-      const reply: string = j?.reply || j?.data?.reply || "Sorry, I did not get a reply.";
+      let reply: string = j?.reply || j?.data?.reply || "Sorry, I did not get a reply.";
       setDemo(Boolean(j?.demo ?? j?.data?.demo ?? false));
+      // PC command: Vercel server user ke PC tak nahi pohanch sakta — is liye
+      // browser/desktop khud seedha local PC agent (127.0.0.1) ko bhejta hai.
+      if (j?.toolUsed === "pc_command" || j?.data?.toolUsed === "pc_command") {
+        try {
+          const token = localStorage.getItem("jarvis-pc-token") || "";
+          const lr = await fetch("http://127.0.0.1:8787/command", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, token }) });
+          const lj = await lr.json();
+          if (lj?.message) reply = String(lj.message);
+        } catch { /* agent band hai — server wala jawab hi rahega */ }
+      }
       addMessage({ id: `a-${Date.now()}`, role: "assistant", text: reply, language: lang, createdAt: new Date().toISOString(), toolUsed: j?.toolUsed || j?.data?.toolUsed });
       setStatus("speaking");
       speakReply(reply);

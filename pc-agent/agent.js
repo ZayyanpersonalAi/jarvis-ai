@@ -173,7 +173,9 @@ async function doAction(parsed, body) {
 }
 
 const server = http.createServer(async (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+  const ALLOWED_ORIGINS = ["http://localhost:3000", "https://jarvis-ai-azure-delta.vercel.app"];
+  const reqOrigin = req.headers.origin || "";
+  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGINS.includes(reqOrigin) ? reqOrigin : "https://jarvis-ai-azure-delta.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") { res.writeHead(204); return res.end(); }

@@ -10,13 +10,15 @@ export default function PcControlPage() {
   const [result, setResult] = useState("");
   const [confirmDanger, setConfirmDanger] = useState(false);
 
+  const AGENT = "http://127.0.0.1:8787";
+  const getToken = () => { try { return localStorage.getItem("jarvis-pc-token") || ""; } catch { return ""; } };
   const check = async () => {
     try {
-      const res = await fetch("/api/pc/status");
+      const res = await fetch(`${AGENT}/status`);
       const j = await res.json();
-      setConnected(Boolean(j.connected));
-      setStatusMsg(j.connected ? `Connected ✓ — ${j.info?.platform || ""} (${j.info?.hostname || ""})` : (j.error || "PC Agent is not connected"));
-    } catch { setConnected(false); setStatusMsg("PC Agent is not connected"); }
+      setConnected(Boolean(j.ok));
+      setStatusMsg(j.ok ? `Connected ✓ — ${j.platform || ""} (${j.hostname || ""})` : "PC Agent is not connected");
+    } catch { setConnected(false); setStatusMsg("PC Agent is not connected — desktop app kholein (agent khud chal jata hai)"); }
   };
   useEffect(() => {
     try { setEnabled(localStorage.getItem("jarvis-pc-enabled") === "1"); } catch { /* ignore */ }
@@ -30,8 +32,9 @@ export default function PcControlPage() {
     if (!enabled) { setResult("PC Control is OFF — turn on the toggle above first."); return; }
     setResult("Sending…");
     try {
-      const res = await fetch("/api/pc/command", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: commandText, confirm }) });
+      const res = await fetch(`${AGENT}/command`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: commandText, confirm, token: getToken() }) });
       const j = await res.json();
+      if (res.status === 401) { setResult("Token ghalat hai — neeche apne PC ka token ek dafa paste karein (desktop app me khud lag jata hai)."); return; }
       if (j.needsConfirmation) { setResult(`⚠️ ${j.message}\n\nPress "Send with confirmation" to send it again.`); setConfirmDanger(true); return; }
       setConfirmDanger(false);
       setResult(j.message || JSON.stringify(j));
@@ -44,7 +47,7 @@ export default function PcControlPage() {
       <h1 className="text-2xl sm:text-3xl font-bold mt-1" style={{ letterSpacing: "-0.02em" }}>PC Control</h1>
       <p className="text-sm mt-1" style={{ color: "var(--text-3)", maxWidth: 640 }}>
         Control your whole PC by voice — open apps and websites, volume, lock, screenshots and more.
-        <b style={{ color: "var(--text-1)" }}> The web app alone cannot control a PC</b> — the <code>pc-agent</code> must be running on your PC (steps below).
+        <b style={{ color: "var(--text-1)" }}> Desktop app me PC agent khud-ba-khud chal jata hai — koi command chalane ki zaroorat nahi.</b> Sirf browser me hon to agent wale PC par ye page kholein.
       </p>
 
       <div className="card-surface p-5 mt-5">
@@ -60,14 +63,15 @@ export default function PcControlPage() {
         </div>
         {!connected && (
           <div className="mt-3 p-4 rounded-xl text-sm" style={{ background: "var(--bg-subtle)" }}>
-            <b>Connect the PC Agent:</b>
+            <b>PC Agent connect karein (koi command nahi chalani):</b>
             <ol className="mt-1 space-y-1" style={{ paddingInlineStart: 20 }}>
-              <li>1. On your PC, open a terminal and run: <code>cd pc-agent && node agent.js</code></li>
-              <li>2. Copy the token from the terminal</li>
-              <li>3. Add it to Jarvis&apos; <code>.env.local</code>: <code>JARVIS_PC_URL=http://127.0.0.1:8787</code> and <code>JARVIS_PC_TOKEN=your-token</code></li>
-              <li>4. Restart the web app (<code>npm run dev</code>)</li>
+              <li>1. <b>Desktop app</b> kholein — PC agent usi ke andar khud chal jata hai, token bhi khud lag jata hai. Bas ye page refresh karein.</li>
+              <li>2. Sirf browser use kar rahe hain to: desktop app ek dafa khol kar band kar dein, phir token file <code>pc-agent/.jarvis-pc-token</code> se token neeche paste kar dein — sirf ek dafa, save ho jayega.</li>
             </ol>
-            <p className="mt-2" style={{ color: "var(--text-3)" }}>Full guide: <code>pc-agent/README.md</code></p>
+            <div className="flex gap-2 mt-2">
+              <input className="input-field" id="pc-token-input" placeholder="PC token (sirf browser ke liye)" />
+              <button className="btn-secondary" onClick={() => { const el = document.getElementById("pc-token-input") as HTMLInputElement | null; if (el?.value) { try { localStorage.setItem("jarvis-pc-token", el.value.trim()); } catch { /* ignore */ } void check(); } }}>Save token</button>
+            </div>
           </div>
         )}
       </div>
