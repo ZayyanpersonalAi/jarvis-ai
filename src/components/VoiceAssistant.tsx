@@ -17,7 +17,9 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function VoiceAssistant() {
-  const { status, error, isDemo, startLive, stop, sendText } = useRealtimeVoice();
+  const { status, error, isDemo, setDemo, startLive, stop, sendText } = useRealtimeVoice();
+  // Asal status: server par Gemini/OpenAI key lagi ho to LIVE, warna demo.
+  useEffect(() => { fetch("/api/status").then((r) => r.json()).then((j) => { if (j?.gemini || j?.openai) setDemo(false); }).catch(() => undefined); }, [setDemo]);
   const messages = useVoiceStore((s) => s.messages);
   const transcript = useVoiceStore((s) => s.transcript);
   const [input, setInput] = useState("");
@@ -49,7 +51,7 @@ export default function VoiceAssistant() {
           <h2 className="text-lg font-bold" style={{ letterSpacing: "-0.01em" }}>Jarvis Voice Assistant — {character.name}</h2>
           <p className="text-sm" style={{ color: "var(--text-3)" }}>Speak or type in Urdu, Roman Urdu or English</p>
         </div>
-        <span className="badge" style={{ borderColor: "var(--border)" }}>{isDemo ? "Demo Mode" : "Live Mode"}</span>
+        <span className="badge" style={{ borderColor: "var(--border)" }}>{isDemo ? "Demo Mode" : "Live — Gemini AI"}</span>
       </div>
 
       <div className="mt-6 flex flex-col items-center gap-3 text-center">
@@ -76,7 +78,8 @@ export default function VoiceAssistant() {
         )}
         {transcript && <p className="text-sm" style={{ color: "var(--text-2)" }}>You said: {transcript}</p>}
         {error && <p className="text-sm" style={{ color: "#b91c1c" }}>{error}</p>}
-        {isDemo && <p className="text-xs" style={{ color: "var(--text-3)", maxWidth: 480 }}>Demo Mode: real OpenAI voice needs OPENAI_API_KEY. Your browser&apos;s speech recognition is being used instead — it understands Urdu too.</p>}
+        {isDemo && <p className="text-xs" style={{ color: "var(--text-3)", maxWidth: 480 }}>Demo Mode: no AI key on the server yet — replies are local samples. Add the free GEMINI_API_KEY to go fully live.</p>}
+        {!isDemo && <p className="text-xs" style={{ color: "var(--text-3)", maxWidth: 480 }}>Live voice: your mic recording is transcribed by Gemini AI and answered live — works in Chrome and in the desktop app.</p>}
       </div>
 
       <div className="mt-6 space-y-2" style={{ maxHeight: 320, overflowY: "auto" }}>

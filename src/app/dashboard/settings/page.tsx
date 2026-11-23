@@ -14,11 +14,14 @@ export default function SettingsPage() {
   const setCharacter = useMemoryStore((s) => s.setCharacter);
   const loadMemory = useMemoryStore((s) => s.load);
   useEffect(() => { loadMemory(); }, [loadMemory]);
+  const [keyStatus, setKeyStatus] = useState<Record<string, boolean>>({});
+  useEffect(() => { fetch("/api/status").then((r) => r.json()).then((j) => setKeyStatus(j || {})).catch(() => undefined); }, []);
   const keys = [
-    { key: "OPENAI_API_KEY", need: "Real voice (Realtime) and AI replies", set: Boolean(process.env.NEXT_PUBLIC_OPENAI_SET) },
-    { key: "NEXT_PUBLIC_SUPABASE_URL + ANON_KEY", need: "Real login + data", set: false },
-    { key: "RESEND_API_KEY", need: "Real email sending", set: false },
-    { key: "STRIPE_SECRET_KEY", need: "Payments", set: false },
+    { key: "GEMINI_API_KEY", need: "AI replies + live voice transcription (FREE)", set: Boolean(keyStatus.gemini) },
+    { key: "OPENAI_API_KEY", need: "Realtime voice (paid, optional)", set: Boolean(keyStatus.openai) },
+    { key: "NEXT_PUBLIC_SUPABASE_URL + ANON_KEY", need: "Real login + data", set: Boolean(keyStatus.supabase) },
+    { key: "RESEND_API_KEY", need: "Real email sending", set: Boolean(keyStatus.resend) },
+    { key: "STRIPE_SECRET_KEY", need: "Payments", set: Boolean(keyStatus.stripe) },
   ];
   return (
     <div>
@@ -56,9 +59,9 @@ export default function SettingsPage() {
         <h3 className="font-bold mb-1">API Key Status</h3>
         <p className="text-sm" style={{ color: "var(--text-3)" }}>Keys live on the server in .env.local — they are never shown in the browser. Below is only what each key unlocks:</p>
         {keys.map((k) => (
-          <p key={k.key} className="text-sm mt-2"><code>{k.key}</code> — {k.need}</p>
+          <p key={k.key} className="text-sm mt-2"><code>{k.key}</code> — {k.need} — <b style={{ color: k.set ? "#2dd4bf" : "#f87171" }}>{k.set ? "Connected ✓" : "Not connected"}</b></p>
         ))}
-        <p className="text-sm mt-3" style={{ color: "var(--text-2)" }}>In demo mode everything can be tried without keys.</p>
+        <p className="text-sm mt-3" style={{ color: "var(--text-2)" }}>Apps connect karne ke liye <a href="/dashboard/connections" style={{ color: "var(--teal-400)", fontWeight: 600 }}>Connections page</a> par tamam options hain.</p>
       </div>
     </div>
   );

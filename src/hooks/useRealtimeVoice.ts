@@ -32,6 +32,10 @@ export function useRealtimeVoice() {
   const setTranscript = useVoiceStore((s) => s.setTranscript);
   const [error, setError] = useState<string | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const recordingRef = useRef(false);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -57,6 +61,7 @@ export function useRealtimeVoice() {
       const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text, language: lang, memory: mem }) });
       const j = await res.json();
       const reply: string = j?.reply || j?.data?.reply || "Sorry, I did not get a reply.";
+      setDemo(Boolean(j?.demo ?? j?.data?.demo ?? false));
       addMessage({ id: `a-${Date.now()}`, role: "assistant", text: reply, language: lang, createdAt: new Date().toISOString(), toolUsed: j?.toolUsed || j?.data?.toolUsed });
       setStatus("speaking");
       speakReply(reply);
@@ -65,7 +70,7 @@ export function useRealtimeVoice() {
       setStatus("error");
       setError("No reply — could not reach /api/chat.");
     }
-  }, [addMessage, setStatus, speakReply]);
+  }, [addMessage, setStatus, setDemo, speakReply]);
 
   const startDemoListening = useCallback(() => {
     const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognitionLike; webkitSpeechRecognition?: new () => SpeechRecognitionLike };
@@ -96,15 +101,57 @@ export function useRealtimeVoice() {
     rec.start();
   }, [sendText, setStatus, setTranscript]);
 
+  // LIVE voice (Gemini): mic recording -> Gemini transcription -> Gemini chat
+  // reply -> awaaz. Chrome aur desktop (Electron) app dono me chalta hai,
+  // Web Speech API ki zaroorat nahi. Ye asal live pipeline hai, demo nahi.
+  const startGeminiListening = useCallback(async () => {
+    try {
+      if (recordingRef.current) return;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mime = ["audio/webm", "audio/mp4", "audio/ogg", ""].find((m) => m === "" || (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m))) || "";
+      const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => { if (e.data && e.data.size) chunksRef.current.push(e.data); };
+      rec.onstop = () => {
+        recordingRef.current = false;
+        streamRef.current?.getTracks().forEach((tr) => tr.stop());
+        const blob = new Blob(chunksRef.current, { type: rec.mimeType || "audio/webm" });
+        if (!blob.size) { setStatus("idle"); return; }
+        setStatus("thinking");
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = String(reader.result || "").split(",")[1] || "";
+          void (async () => {
+            try {
+              const res = await fetch("/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ audio: base64, mimeType: blob.type }) });
+              const j = await res.json();
+              if (res.ok && j?.text) { setTranscript(j.text); await sendText(j.text); }
+              else { setError("Voice samajh nahi ayi — dobara bol kar dekhein, ya type kar lein."); setStatus("idle"); }
+            } catch { setError("Voice server tak nahi pohanchi — internet check karein."); setStatus("idle"); }
+          })();
+        };
+        reader.readAsDataURL(blob);
+      };
+      recorderRef.current = rec;
+      recordingRef.current = true;
+      setError(null);
+      setStatus("listening");
+      rec.start();
+    } catch {
+      // Mic nahi mila / permission nahi — akhri fallback Web Speech (sirf Chrome)
+      startDemoListening();
+    }
+  }, [sendText, setError, setStatus, setTranscript]);
+
   const startLive = useCallback(async () => {
     setError(null);
     try {
       const res = await fetch("/api/realtime/session", { method: "POST" });
       const j = await res.json();
       if (!res.ok || !j?.client_secret) {
-        // Demo fallback
-        setDemo(true);
-        startDemoListening();
+        // OpenAI Realtime nahi — LIVE Gemini voice pipeline
+        void startGeminiListening();
         return;
       }
       setDemo(false);
@@ -135,12 +182,15 @@ export function useRealtimeVoice() {
       await pc.setRemoteDescription(answer);
       setStatus("listening");
     } catch {
-      setDemo(true);
-      startDemoListening();
+      void startGeminiListening();
     }
-  }, [addMessage, setDemo, setStatus, setTranscript, startDemoListening]);
+  }, [addMessage, setDemo, setStatus, setTranscript, startGeminiListening]);
 
   const stop = useCallback(() => {
+    if (recordingRef.current && recorderRef.current) {
+      try { recorderRef.current.stop(); } catch { /* ignore */ }
+      return; // onstop transcription + reply sambhal lega
+    }
     try { recRef.current?.stop(); } catch { /* ignore */ }
     try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
     if (pcRef.current) { pcRef.current.getSenders().forEach((s) => s.track?.stop()); pcRef.current.close(); pcRef.current = null; }
@@ -149,5 +199,5 @@ export function useRealtimeVoice() {
 
   useEffect(() => () => { try { recRef.current?.stop(); } catch { /* ignore */ } }, []);
 
-  return { status: status as VoiceStatus, error, isDemo, startLive, startDemoListening, stop, sendText, speakUrdu: speakReply };
+  return { status: status as VoiceStatus, error, isDemo, setDemo, startLive, startGeminiListening, startDemoListening, stop, sendText, speakUrdu: speakReply };
 }

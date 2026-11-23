@@ -34,6 +34,7 @@ export const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/voice", label: "Voice Assistant" },
   { href: "/dashboard/tools", label: "Tools" },
+  { href: "/dashboard/connections", label: "Connections" },
   { href: "/dashboard/commands", label: "Commands" },
   { href: "/dashboard/appointments", label: "Appointments" },
   { href: "/dashboard/pc-control", label: "PC Control" },
