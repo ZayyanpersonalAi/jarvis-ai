@@ -1,7 +1,7 @@
 {
   "name": "jarvis-ai-desktop",
   "version": "1.0.0",
-  "description": "Jarvis AI — Urdu Voice Assistant (Desktop App)",
+  "description": "Jarvis AI \u2014 Urdu Voice Assistant (Desktop App)",
   "main": "src/main.js",
   "private": true,
   "scripts": {
@@ -18,9 +18,26 @@
   "build": {
     "appId": "com.funnelsbyzayyan.jarvisai",
     "productName": "Jarvis AI",
-    "files": ["src/**/*", "assets/**/*", "package.json"],
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
     "win": {
-      "target": [{"target": "nsis", "arch": ["x64"]}, {"target": "portable", "arch": ["x64"]}],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "assets/icon.png"
     },
     "nsis": {
@@ -30,7 +47,23 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Jarvis AI"
     },
-    "mac": {"target": "dmg", "icon": "assets/icon.png"},
-    "linux": {"target": "AppImage", "icon": "assets/icon.png", "category": "Utility"}
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png",
+      "category": "Utility"
+    },
+    "extraResources": [
+      {
+        "from": "pc-agent",
+        "to": "pc-agent",
+        "filter": [
+          "agent.js"
+        ]
+      }
+    ]
   }
 }
